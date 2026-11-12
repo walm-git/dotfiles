@@ -190,6 +190,32 @@ function export ($name, $value)
     set-item -force -path env:$name -value $value
 }
 
+## runcc - compile a C file with gcc and run it, then clean up the binary
+# Usage: runcc hello.c
+function runcc {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [string]$Source
+    )
+
+    # On Windows an executable needs a .exe suffix; on Unix it doesn't.
+    $isWin = if ($null -ne $IsWindows) { $IsWindows } else { $true }
+    $exe = if ($isWin) { 'poopy.tmp.exe' } else { 'poopy.tmp' }
+
+    try {
+        # gcc <source> -o <exe>  (only run if the compile succeeds)
+        gcc $Source -o $exe
+        if ($LASTEXITCODE -eq 0) {
+            & "./$exe"
+        }
+    }
+    finally {
+        # rm -f poopy.tmp - always clean up, even on compile error / Ctrl-C
+        Remove-Item -Force -ErrorAction SilentlyContinue $exe
+    }
+}
+
 
 # Find out if the current user identity is elevated (has admin rights)
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -219,3 +245,26 @@ $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
 }
+## WinUtil (Chris Titus Tech) - https://christitus.com/windows-tool/
+# Type:  winutil          -> stable branch
+#        winutil -Dev     -> development branch
+# WinUtil needs Administrator, so this relaunches it elevated automatically.
+function winutil {
+    [CmdletBinding()]
+    param([switch]$Dev)
+
+    $url = if ($Dev) { 'https://christitus.com/windev' } else { 'https://christitus.com/win' }
+    $command = "irm $url | iex"
+
+    $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Invoke-Expression $command
+    }
+    else {
+        Write-Host 'WinUtil needs Administrator - relaunching elevated...' -ForegroundColor Yellow
+        Start-Process -FilePath (Get-Process -Id $PID).Path `
+                      -ArgumentList '-NoExit', '-NoProfile', '-Command', $command `
+                      -Verb RunAs
+    }
+}
+
