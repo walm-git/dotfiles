@@ -8,8 +8,7 @@
 #}
 
 # Oh my posh
-oh-my-posh init pwsh --config ~/.config/oh-my-posh.toml | Invoke-Expression
-Enable-PoshTransientPrompt
+oh-my-posh init pwsh --config ~/dotfiles/general/oh-my-posh.toml | Invoke-Expression
 
 # Starship Invoke
 # Invoke-Expression (&starship init powershell)
@@ -19,7 +18,6 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 ## Aliases
 
-Set-Alias code code-insiders
 Set-Alias f fastfetch
 Set-Alias wget wget2
 Set-Alias py python
@@ -35,8 +33,8 @@ Set-Alias ll longlist
 $env:CC = "gcc"
 $env:YAZI_FILE_ONE = "C:\Program Files\Git\usr\bin\file.exe"
 $env:YAZI_CONFIG_HOME = "C:\Users\walm\AppData\Roaming\yazi"
-$env:EDITOR = "code-insiders"
-$env:VISUAL = "code-insiders"
+$env:EDITOR = "code"
+$env:VISUAL = "code"
 
 ## Add to PATH
 $env:PATH += ";C:\Program Files\7-Zip"
